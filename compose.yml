@@ -1,0 +1,34 @@
+networks:
+  labnet:
+    driver: bridge
+    internal: false
+
+services:
+
+  victim:
+    build:
+      context: .
+      dockerfile: Dockerfile.victim
+    command: ["sleep", "infinity"]
+    networks:
+      - labnet
+    tty: true
+    container_name: tp_victim
+
+  observer:
+    build:
+      context: .
+      dockerfile: Dockerfile.observer
+    image: observer-ready:latest
+    command: ["sleep", "infinity"]
+    # -> on partage la namespace réseau de la victime
+    network_mode: "service:victim"
+    depends_on:
+      - victim
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    volumes:
+      - ./pcaps:/pcaps
+    tty: true
+    container_name: tp_observer
